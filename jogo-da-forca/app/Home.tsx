@@ -1,62 +1,79 @@
 import ForcaImg from "@/components/forca";
+import LetterSortedList from "@/components/letterKickList";
 import { words } from "@/constants/words";
 import { useState } from "react";
-import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import { Button, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from "react-native";
 
 export default function Home() {
-  const [erros, setErros] = useState(0);
-  const [gameInitialized, setGameInitialized ] = useState(false)
-  const [word, setWord] = useState("")
-  const [tip, setTip] = useState("")
-  const [wordsAttempts, setWordsAttempts] = useState()
+  const [errors, setErrors] = useState(0);
+  const [gameInitialized, setGameInitialized] = useState(false);
+  const [word, setWord] = useState("");
+  const [tip, setTip] = useState("");
+  const [wordKick, setWordKick] = useState("");
+  const [lettersKickList, serLettersKickList] = useState([["f", true],["h",false]])
 
-  const startGame = ()=>{
-    setGameInitialized(!gameInitialized)
-    let segment = Math.floor(Math.random() * words.length)
-    let tip: string = String(words[segment][0])
-    setTip(tip)
-    let indexWord = Math.floor(Math.random() * words[segment][1].length)
-     
-    setWord(String(words[segment][1][indexWord]))
-  }
+  const startGame = () => {
+    if (!gameInitialized) setGameInitialized(true);
 
-  const kick = ()=>{
-    erros == 6 ? setErros(0) : setErros(erros+1)
-  }
+    const segment = Math.floor(Math.random() * words.length);
+    const tip = String(words[segment][0]);
+    setTip(tip);
+
+    const indexWord = Math.floor(Math.random() * words[segment][1].length);
+    setWord(String(words[segment][1][indexWord]));
+    setErrors(0);
+    setWordKick("");
+  };
+
+  const kick = () => {
+    setErrors(prev => (prev === 6 ? 0 : prev + 1));
+  };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-
-      {!gameInitialized ? <Button onPress={startGame} title="iniciar jogo" /> : <Button onPress={startGame} title="novo jogo" />}
-      
-      {gameInitialized ? <View>
-        <Text style={styles.text}>Tema: {tip}</Text>
-        <ForcaImg indexImg={erros}/>
-        <TextInput
-          style={styles.input}
-          placeholder=""
-        />
-        <Button onPress={kick} title="kick" />
-      </View> : null}
-    </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} style={{ flex: 1 }}>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}>
+          {!gameInitialized ? (
+            <Button onPress={startGame} title="Iniciar jogo" />
+          ) : (
+            <Button onPress={startGame} title="Novo jogo" />
+          )}
+          {gameInitialized && (
+            <View style={{ width: "100%", alignItems: "center", marginTop: 20 }}>
+              <LetterSortedList letterKicks={lettersKickList}/>
+              <Text style={styles.text}>Tema: {tip}</Text>
+              <ForcaImg indexImg={errors} />
+              <TextInput
+                style={styles.input}
+                value={wordKick}
+                onChangeText={setWordKick}
+                placeholder="Digite uma letra"
+                maxLength={1}
+              />
+              <Button onPress={kick} title="Chutar" />
+            </View>
+          )}
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  input:{
-    borderWidth:1,
+  input: {
+    borderWidth: 1,
     borderRadius: 5,
-    margin: 5, 
+    margin: 10,
+    padding: 8,
+    width: "50%",
+    textAlign: "center",
   },
   text: {
     textAlign: "center",
     fontSize: 20,
-    margin: 8
-  }
-})
+    margin: 8,
+  },
+});
