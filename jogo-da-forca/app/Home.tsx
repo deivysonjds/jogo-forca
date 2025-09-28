@@ -2,15 +2,17 @@ import ForcaImg from "@/components/forca";
 import LetterSortedList from "@/components/letterKickList";
 import { words } from "@/constants/words";
 import { useState } from "react";
-import { Button, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from "react-native";
+import { Alert, Button, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from "react-native";
 
 export default function Home() {
   const [errors, setErrors] = useState(0);
   const [gameInitialized, setGameInitialized] = useState(false);
+  const [isWinner, setIsWinner] = useState(false)
+  const [isLoser, setIsLoser] = useState(false)
   const [word, setWord] = useState("");
   const [tip, setTip] = useState("");
-  const [wordKick, setWordKick] = useState("");
-  const [lettersKickList, serLettersKickList] = useState([["f", true],["h",false]])
+  const [letterKick, setLetterKick] = useState("");
+  const [lettersKickList, serLettersKickList] = useState<(string | boolean)[][]>([["f", true],["h",false]])
 
   const startGame = () => {
     if (!gameInitialized) setGameInitialized(true);
@@ -22,10 +24,40 @@ export default function Home() {
     const indexWord = Math.floor(Math.random() * words[segment][1].length);
     setWord(String(words[segment][1][indexWord]));
     setErrors(0);
-    setWordKick("");
+    setLetterKick("");
   };
 
+  const restart = ()=>{
+    setIsLoser(false)
+    setIsWinner(false)
+    serLettersKickList([])
+    startGame()
+  }
+
   const kick = () => {
+
+    if (letterKick === "") {
+      return
+    }
+    
+    let isLetterAlreadyDrawn: boolean = false
+    
+    lettersKickList.forEach(element => {
+      if (element[0]===letterKick) {
+        Alert.alert("Aviso", "Insira outra letra!")
+        isLetterAlreadyDrawn = true
+        return
+      }
+    });
+
+    if(isLetterAlreadyDrawn) return;
+
+    if(word.includes(letterKick)){
+      serLettersKickList([...lettersKickList, [letterKick, true]])
+      return
+    }
+
+    serLettersKickList([...lettersKickList, [letterKick, false]])
     setErrors(prev => (prev === 6 ? 0 : prev + 1));
   };
 
@@ -39,7 +71,7 @@ export default function Home() {
           {!gameInitialized ? (
             <Button onPress={startGame} title="Iniciar jogo" />
           ) : (
-            <Button onPress={startGame} title="Novo jogo" />
+            <Button onPress={restart} title="Novo jogo" />
           )}
           {gameInitialized && (
             <View style={{ width: "100%", alignItems: "center", marginTop: 20 }}>
@@ -48,8 +80,8 @@ export default function Home() {
               <ForcaImg indexImg={errors} />
               <TextInput
                 style={styles.input}
-                value={wordKick}
-                onChangeText={setWordKick}
+                value={letterKick}
+                onChangeText={setLetterKick}
                 placeholder="Digite uma letra"
                 maxLength={1}
               />
