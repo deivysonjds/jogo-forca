@@ -1,4 +1,3 @@
-import {useAssets} from "expo-asset"
 import { Image, StyleSheet, Text } from "react-native";
 
 type props = {
@@ -6,7 +5,7 @@ type props = {
 }
 
 export default function ForcaImg({indexImg}:props){
-    const [assets, error] = useAssets([
+    const images = [
         require('../assets/images/img1.png'),
         require('../assets/images/img2.png'),
         require('../assets/images/img3.png'),
@@ -14,9 +13,9 @@ export default function ForcaImg({indexImg}:props){
         require('../assets/images/img5.png'),
         require('../assets/images/img6.png'),
         require('../assets/images/img7.png'),
-    ]);
+    ];
     
-    return assets ? <Image style={styles.img} source={assets[indexImg]} /> : null
+    return <Image style={styles.img} source={images[indexImg]} />
 }
 
 const styles = StyleSheet.create({
