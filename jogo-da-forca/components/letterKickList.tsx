@@ -7,7 +7,7 @@ type props = {
 export default function LetterSortedList({ letterKicks}: props){
 
     return (
-        <View>
+        <View >
             <Text style={styles.text}>
                 Chutes
             </Text>
@@ -34,9 +34,9 @@ const styles = StyleSheet.create({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        width: 30,
-        height: 30,
-        padding: 5,
+        width: 35,
+        height: 35,
+        padding: 3,
         margin: 5,
         borderWidth: 1,
         borderRadius: 5
@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
         display: "flex",
         justifyContent: "center",
         flexDirection: "row",
+        flexWrap: "wrap",
         margin: 10
     },
     text: {

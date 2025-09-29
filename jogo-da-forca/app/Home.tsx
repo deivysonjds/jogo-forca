@@ -1,18 +1,32 @@
 import ForcaImg from "@/components/forca";
 import LetterSortedList from "@/components/letterKickList";
+import HiddenWorld from "@/components/hiddenWord";
 import { words } from "@/constants/words";
 import { useState } from "react";
-import { Alert, Button, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from "react-native";
+import {
+  Alert,
+  Button,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 
 export default function Home() {
   const [errors, setErrors] = useState(0);
   const [gameInitialized, setGameInitialized] = useState(false);
-  const [isWinner, setIsWinner] = useState(false)
-  const [isLoser, setIsLoser] = useState(false)
+  const [isWinner, setIsWinner] = useState(false);
+  const [isLoser, setIsLoser] = useState(false);
   const [word, setWord] = useState("");
   const [tip, setTip] = useState("");
   const [letterKick, setLetterKick] = useState("");
-  const [lettersKickList, serLettersKickList] = useState<(string | boolean)[][]>([["f", true],["h",false]])
+  const [lettersKickList, setLettersKickList] = useState<(string | boolean)[][]>(
+    []
+  );
 
   const startGame = () => {
     if (!gameInitialized) setGameInitialized(true);
@@ -22,43 +36,62 @@ export default function Home() {
     setTip(tip);
 
     const indexWord = Math.floor(Math.random() * words[segment][1].length);
-    setWord(String(words[segment][1][indexWord]));
+    setWord(String(words[segment][1][indexWord]).toLowerCase());
     setErrors(0);
-    setLetterKick("");
   };
 
-  const restart = ()=>{
-    setIsLoser(false)
-    setIsWinner(false)
-    serLettersKickList([])
-    startGame()
-  }
+  const restart = () => {
+    setErrors(0);
+    setIsLoser(false);
+    setIsWinner(false);
+    setLettersKickList([]);
+    setLetterKick("");
+    startGame();
+  };
 
-  const kick = () => {
+    const checkWinner = (updatedList: (string | boolean)[][]) => {
+    let lettersWord = word.split("");
+    let guessedLetters: string[] = [];
 
-    if (letterKick === "") {
-      return
-    }
-    
-    let isLetterAlreadyDrawn: boolean = false
-    
-    lettersKickList.forEach(element => {
-      if (element[0]===letterKick) {
-        Alert.alert("Aviso", "Insira outra letra!")
-        isLetterAlreadyDrawn = true
-        return
-      }
+    updatedList.forEach((el) => {
+      if (el[1] === true) guessedLetters.push(String(el[0]).toLowerCase());
     });
 
-    if(isLetterAlreadyDrawn) return;
+    let allFound = lettersWord.every((el) =>
+      guessedLetters.includes(el.toLowerCase())
+    );
 
-    if(word.includes(letterKick)){
-      serLettersKickList([...lettersKickList, [letterKick, true]])
-      return
+    if (allFound) setIsWinner(true);
+  };
+
+  const kick = () => {
+    if (isWinner || isLoser) {
+      Alert.alert("Aviso", "Reinicie o jogo!");
+      return;
+    }
+    if (letterKick === "") return;
+
+    const normalizedKick = letterKick.toLowerCase();
+
+    if (
+      lettersKickList.some(
+        (el) => el[0].toString().toLowerCase() === normalizedKick
+      )
+    ) {
+      Alert.alert("Aviso", "Insira outra letra!");
+      return;
     }
 
-    serLettersKickList([...lettersKickList, [letterKick, false]])
-    setErrors(prev => (prev === 6 ? 0 : prev + 1));
+    if (word.includes(normalizedKick)) {
+      const newList = [...lettersKickList, [normalizedKick, true]];
+      setLettersKickList(newList);
+      checkWinner(newList);
+    } else {
+      if (errors === 5) setIsLoser(true);
+      const newList = [...lettersKickList, [normalizedKick, false]];
+      setLettersKickList(newList);
+      setErrors((prev) => prev + 1);
+    }
   };
 
   return (
@@ -67,16 +100,31 @@ export default function Home() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} style={{ flex: 1 }}>
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}>
-          {!gameInitialized ? (
-            <Button onPress={startGame} title="Iniciar jogo" />
-          ) : (
-            <Button onPress={restart} title="Novo jogo" />
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          }}
+        >
+          {!gameInitialized && <Button onPress={startGame} title="Iniciar jogo" />}
+
+          {(isWinner || isLoser) && (
+            <View>
+              <Text style={styles.text}>
+                Você {isWinner ? "venceu, parabéns!" : "perdeu, tente novamente!"}
+              </Text>
+              <Text style={styles.text}>A palavra era: {word}</Text>
+              <Button onPress={restart} title="Reiniciar" />
+            </View>
           )}
-          {gameInitialized && (
+
+          {gameInitialized && !isWinner && !isLoser && (
             <View style={{ width: "100%", alignItems: "center", marginTop: 20 }}>
-              <LetterSortedList letterKicks={lettersKickList}/>
+              <LetterSortedList letterKicks={lettersKickList} />
               <Text style={styles.text}>Tema: {tip}</Text>
+              <HiddenWorld word={word} lettersKickList={lettersKickList} />
               <ForcaImg indexImg={errors} />
               <TextInput
                 style={styles.input}
